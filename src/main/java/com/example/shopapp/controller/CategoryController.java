@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("api/v1/categories")
+@RequestMapping("${api.prefix}/categories")
 public class CategoryController {
     @GetMapping("") //http://localhost:8088/api/v1/categories?page=1&limit=10
     public ResponseEntity<String> getAllCategories(@RequestParam("page") int page, @RequestParam("limit") int limit) {
@@ -18,9 +18,13 @@ public class CategoryController {
     }
 
     @PostMapping("")
-    public ResponseEntity<?> insertCategory(@Valid @RequestBody CategoryDTO categoryDTO, BindingResult result) {
+    public ResponseEntity<?> insertCategory(@Valid @RequestBody CategoryDTO categoryDTO,
+                                            BindingResult result) {
         if (result.hasErrors()) {
-            List<String> errorMessage = result.getFieldErrors().stream().map(FieldError::getDefaultMessage).toList();
+            List<String> errorMessage = result.getFieldErrors()
+                    .stream()
+                    .map(FieldError::getDefaultMessage)
+                    .toList();
             return ResponseEntity.badRequest().body(errorMessage);
         }
         return ResponseEntity.ok("add category " + categoryDTO.getName());
