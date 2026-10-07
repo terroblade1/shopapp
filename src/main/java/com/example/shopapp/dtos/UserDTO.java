@@ -5,8 +5,12 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
+import java.time.LocalDate;
+
 @Data
 @Builder
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserDTO {
@@ -26,13 +30,13 @@ public class UserDTO {
     private String retypePassword;
 
     @JsonProperty("date_of_birth")
-    private String dateOfBirth;
+    private LocalDate dateOfBirth;
 
     @JsonProperty("facebook_account_id")
-    private String facebookAccountId;
+    private int facebookAccountId;
 
     @JsonProperty("google_account_id")
-    private String googleAccountId;
+    private int googleAccountId;
 
     @NotNull(message = "Role ID is required")
     @JsonProperty("role_id")
