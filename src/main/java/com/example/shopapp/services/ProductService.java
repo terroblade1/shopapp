@@ -10,6 +10,7 @@ import com.example.shopapp.models.ProductImage;
 import com.example.shopapp.repositories.CategoryRepository;
 import com.example.shopapp.repositories.ProductImageRepository;
 import com.example.shopapp.repositories.ProductRepository;
+import com.example.shopapp.responses.ProductResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -29,9 +30,13 @@ public class ProductService implements IProductService {
     public Product createProduct(ProductDTO productDTO) throws DataNotFoundException {
         Category existingCategory = categoryRepository.findById(productDTO.getCategoryId())
                 .orElseThrow(() -> new DataNotFoundException("Cannot find category"));
-        Product newProduct = Product.builder().name(productDTO.getName()).price(productDTO.getPrice())
-                .thumbnail(productDTO.getThumbnail()).description(productDTO.getDescription())
-                .category(existingCategory).build();
+        Product newProduct = Product.builder()
+                .name(productDTO.getName())
+                .price(productDTO.getPrice())
+                .thumbnail(productDTO.getThumbnail())
+                .description(productDTO.getDescription())
+                .category(existingCategory)
+                .build();
         return productRepository.save(newProduct);
     }
 
@@ -42,8 +47,21 @@ public class ProductService implements IProductService {
     }
 
     @Override
-    public Page<Product> getAllProduct(PageRequest pageRequest) {
-        return productRepository.findAll(pageRequest);
+    public Page<ProductResponse> getAllProduct(PageRequest pageRequest) {
+        return productRepository.findAll(pageRequest)
+                .map(product -> {
+                    ProductResponse productResponse = ProductResponse.builder()
+                            .name(product.getName())
+                            .price(product.getPrice())
+                            .description(product.getDescription())
+                            .thumbnail(product.getThumbnail())
+                            .categoryId(product.getCategory()
+                                    .getId())
+                            .build();
+                    productResponse.setCreatedAt(product.getCreatedAt());
+                    productResponse.setUpdatedAt(product.getUpdatedAt());
+                    return productResponse;
+                });
     }
 
 
@@ -78,9 +96,12 @@ public class ProductService implements IProductService {
     public ProductImage createProductImage(Long productId, ProductImageDTO productImageDTO) throws Exception {
         Product existingProduct = productRepository.findById(productId)
                 .orElseThrow(() -> new DataNotFoundException("Cannot find product"));
-        ProductImage newProductImage = ProductImage.builder().product(existingProduct)
-                .imageUrl(productImageDTO.getImageUrl()).build();
-        int size = productImageRepository.findByProductId(productId).size();
+        ProductImage newProductImage = ProductImage.builder()
+                .product(existingProduct)
+                .imageUrl(productImageDTO.getImageUrl())
+                .build();
+        int size = productImageRepository.findByProductId(productId)
+                .size();
         if (size >= ProductImage.MAXIMUM_IMAGE_PER_PRODUCT) {
             throw new InValidParamException("Number of image must be <= " + ProductImage.MAXIMUM_IMAGE_PER_PRODUCT);
         }

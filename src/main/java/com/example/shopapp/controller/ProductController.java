@@ -4,9 +4,14 @@ import com.example.shopapp.dtos.ProductDTO;
 import com.example.shopapp.dtos.ProductImageDTO;
 import com.example.shopapp.models.Product;
 import com.example.shopapp.models.ProductImage;
+import com.example.shopapp.responses.ProductListResponse;
+import com.example.shopapp.responses.ProductResponse;
 import com.example.shopapp.services.IProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -36,14 +41,18 @@ public class ProductController {
     public ResponseEntity<?> insertProduct(@Valid @RequestBody ProductDTO productDTO, BindingResult result) {
         try {
             if (result.hasErrors()) {
-                List<String> errorMessage = result.getFieldErrors().stream().map(FieldError::getDefaultMessage)
+                List<String> errorMessage = result.getFieldErrors()
+                        .stream()
+                        .map(FieldError::getDefaultMessage)
                         .toList();
-                return ResponseEntity.badRequest().body(errorMessage);
+                return ResponseEntity.badRequest()
+                        .body(errorMessage);
             }
             Product newProduct = productService.createProduct(productDTO);
             return ResponseEntity.ok(newProduct);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(e.getMessage());
         }
     }
 
@@ -54,7 +63,8 @@ public class ProductController {
             Product existingProduct = productService.getProductById(productId);
             files = files == null ? new ArrayList<MultipartFile>() : files;
             if (files.size() > ProductImage.MAXIMUM_IMAGE_PER_PRODUCT) {
-                return ResponseEntity.badRequest().body("You can only upload 5 image");
+                return ResponseEntity.badRequest()
+                        .body("You can only upload 5 image");
             }
             List<ProductImage> productImages = new ArrayList<>();
             for (MultipartFile file : files) {
@@ -68,16 +78,21 @@ public class ProductController {
                 }
                 String contentType = file.getContentType();
                 if (contentType == null || !contentType.startsWith("image/")) {
-                    return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body("File must be an image");
+                    return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+                            .body("File must be an image");
                 }
                 String filename = storeFile(file);
                 ProductImage productImage = productService.createProductImage(existingProduct.getId(),
-                        ProductImageDTO.builder().imageUrl(filename).build());
+                        ProductImageDTO.builder()
+                                .imageUrl(filename)
+                                .build());
                 productImages.add(productImage);
             }
-            return ResponseEntity.ok().body(productImages);
+            return ResponseEntity.ok()
+                    .body(productImages);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(e.getMessage());
         }
 
 
@@ -93,7 +108,8 @@ public class ProductController {
             throw new IOException("Invalid image file format");
         }
         String filename = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
-        String uniqueFileName = UUID.randomUUID().toString() + "_" + filename;
+        String uniqueFileName = UUID.randomUUID()
+                .toString() + "_" + filename;
         Path uploadDir = Paths.get("uploads");
         if (!Files.exists(uploadDir)) {
             Files.createDirectories(uploadDir);
@@ -104,8 +120,17 @@ public class ProductController {
     }
 
     @GetMapping("")
-    public ResponseEntity<String> getProducts(@RequestParam("page") int page, @RequestParam("limit") int limit) {
-        return ResponseEntity.ok("get product");
+    public ResponseEntity<ProductListResponse> getProducts(@RequestParam("page") int page,
+                                                           @RequestParam("limit") int limit) {
+        PageRequest pageRequest = PageRequest.of(page, limit, Sort.by("createdAt")
+                .descending());
+        Page<ProductResponse> productPage = productService.getAllProduct(pageRequest);
+        int totalPage = productPage.getTotalPages();
+        List<ProductResponse> products = productPage.getContent();
+        return ResponseEntity.ok(ProductListResponse.builder()
+                .products(products)
+                .totalPage(totalPage)
+                .build());
     }
 
     //http://localhost:8088/api/v1/products/1
