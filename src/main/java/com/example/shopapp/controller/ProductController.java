@@ -7,6 +7,7 @@ import com.example.shopapp.models.ProductImage;
 import com.example.shopapp.responses.ProductListResponse;
 import com.example.shopapp.responses.ProductResponse;
 import com.example.shopapp.services.IProductService;
+import com.github.javafaker.Faker;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -142,6 +143,30 @@ public class ProductController {
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteProduct(@PathVariable("id") long id) {
         return ResponseEntity.ok("delete product by id: " + id);
+    }
+
+    @PostMapping("/generateFakeProduct")
+    public ResponseEntity<String> generateFakeProduct() {
+        Faker faker = new Faker();
+        for (int i = 0; i <= 1000; i++) {
+            String productName = faker.commerce()
+                    .productName();
+            if (productService.existsByName(productName)) {
+                continue;
+            }
+            ProductDTO productDTO = ProductDTO.builder()
+                    .name(productName)
+                    .price((float)faker.number().numberBetween(100000,1000000000))
+                    .description(faker.lorem().sentence())
+                    .categoryId((long)faker.number().numberBetween(1,5))
+                    .build();
+            try {
+                productService.createProduct(productDTO);
+            } catch (Exception e) {
+                return ResponseEntity.badRequest().body(e.getMessage());
+            }
+        }
+        return ResponseEntity.ok("Fake Data Successfully");
     }
 
 }

@@ -1,7 +1,6 @@
 package com.example.shopapp.responses;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.persistence.Column;
 import lombok.*;
 
 import java.time.LocalDateTime;
