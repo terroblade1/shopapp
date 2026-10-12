@@ -49,36 +49,26 @@ public class ProductService implements IProductService {
     @Override
     public Page<ProductResponse> getAllProduct(PageRequest pageRequest) {
         return productRepository.findAll(pageRequest)
-                .map(product -> {
-                    ProductResponse productResponse = ProductResponse.builder()
-                            .name(product.getName())
-                            .price(product.getPrice())
-                            .description(product.getDescription())
-                            .thumbnail(product.getThumbnail())
-                            .categoryId(product.getCategory()
-                                    .getId())
-                            .build();
-                    productResponse.setCreatedAt(product.getCreatedAt());
-                    productResponse.setUpdatedAt(product.getUpdatedAt());
-                    return productResponse;
-                });
+                .map(ProductResponse::fromProduct);
     }
 
 
     @Override
-    public Product updateProduct(long productId, ProductDTO productDTO) throws DataNotFoundException {
-        Product existingProduct = getProductById(productId);
-        Category existingCategory = categoryRepository.findById(productDTO.getCategoryId())
-                .orElseThrow(() -> new DataNotFoundException("Cannot find category"));
+    public Product updateProduct(long id, ProductDTO productDTO) throws Exception {
+        Product existingProduct = getProductById(id);
         if (existingProduct != null) {
+            Category existingCategory = categoryRepository.findById(productDTO.getCategoryId())
+                    .orElseThrow(() -> new DataNotFoundException(
+                            "Cannot find category with id: " + productDTO.getCategoryId()));
             existingProduct.setName(productDTO.getName());
-            existingProduct.setPrice(productDTO.getPrice());
-            existingProduct.setThumbnail(productDTO.getThumbnail());
-            existingProduct.setDescription(productDTO.getDescription());
             existingProduct.setCategory(existingCategory);
+            existingProduct.setPrice(productDTO.getPrice());
+            existingProduct.setDescription(productDTO.getDescription());
+            existingProduct.setThumbnail(productDTO.getThumbnail());
             return productRepository.save(existingProduct);
         }
         return null;
+
     }
 
     @Override

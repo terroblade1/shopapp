@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.util.Date;
 
 @Entity
 @Table(name = "orders")
@@ -38,13 +38,13 @@ public class Order {
     private String note;
 
     @Column(name = "order_date")
-    private LocalDateTime orderDate;
+    private Date orderDate;
 
     @Column(name = "status")
     private String status;
 
     @Column(name = "total_money")
-    private Float totalMoney;
+    private Integer totalMoney;
 
     @Column(name = "shipping_method", length = 100)
     private String shippingMethod;

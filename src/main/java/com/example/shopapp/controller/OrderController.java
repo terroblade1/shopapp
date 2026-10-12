@@ -1,8 +1,11 @@
 package com.example.shopapp.controller;
 
-import com.example.shopapp.dtos.CategoryDTO;
 import com.example.shopapp.dtos.OrderDTO;
+import com.example.shopapp.models.Order;
+import com.example.shopapp.responses.OrderResponse;
+import com.example.shopapp.services.IOrderService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -12,7 +15,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("${api.prefix}/orders")
+@RequiredArgsConstructor
 public class OrderController {
+    private final IOrderService orderService;
+
     @PostMapping("")
     public ResponseEntity<?> createOrder(@Valid @RequestBody OrderDTO orderDTO, BindingResult result) {
         try {
@@ -21,11 +27,14 @@ public class OrderController {
                         .stream()
                         .map(FieldError::getDefaultMessage)
                         .toList();
-                return ResponseEntity.badRequest().body(errorMessage);
+                return ResponseEntity.badRequest()
+                        .body(errorMessage);
             }
-            return ResponseEntity.ok("add order OK ");
+            Order order = orderService.createOrder(orderDTO);
+            return ResponseEntity.ok(order);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(e.getMessage());
         }
     }
 
@@ -34,7 +43,8 @@ public class OrderController {
         try {
             return ResponseEntity.ok("get Order by user Id: " + userId);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(e.getMessage());
         }
     }
 
